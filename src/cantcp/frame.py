@@ -30,7 +30,8 @@ _PAD_OFFSET: Final = 5
 """Classic __pad offset; must be zero."""
 
 _FD_FLAGS_OFFSET: Final = 5
-"""canfd_frame flags offset (BRS 0x01, ESI 0x02)."""
+"""canfd_frame flags offset (BRS 0x01, ESI 0x02; the kernel's FD marker
+CANFD_FDF 0x04 is accepted on input and ignored)."""
 
 _RES0_OFFSET: Final = 6
 """__res0 offset; must be zero in both layouts."""
@@ -55,7 +56,10 @@ _CAN_SFF_MASK: Final = 0x000007FF
 
 _CANFD_BRS: Final = 0x01
 _CANFD_ESI: Final = 0x02
-_CANFD_MASK: Final = _CANFD_BRS | _CANFD_ESI
+# _CANFD_FDF: the kernel sets the FD marker when it delivers a CAN FD frame.
+# The bit is accepted on input and ignored; encoding never writes it.
+_CANFD_FDF: Final = 0x04
+_CANFD_MASK: Final = _CANFD_BRS | _CANFD_ESI | _CANFD_FDF
 
 _VALID_FD_DATA_LENS: Final = frozenset({0, 1, 2, 3, 4, 5, 6, 7, 8, 12, 16, 20, 24, 32, 48, 64})
 """CAN FD data lengths encodable in the 4-bit DLC field."""
