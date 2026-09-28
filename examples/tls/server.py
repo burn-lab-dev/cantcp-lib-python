@@ -68,12 +68,17 @@ def serve(conn: ssl.SSLSocket, addr: tuple[str, int]) -> None:
     """Serve one client: print the frames and answer each of them."""
     peer = conn.getpeercert()
     subject = dict(item[0] for item in peer["subject"]) if peer else None
-    print(f"client {addr}: TLS {conn.version()}, subject {subject}")
-    encoder = cantcp.Encoder(conn)
-    for frame in cantcp.Decoder(conn):
-        print(f"frame {frame}")
+    print(f"client {addr}: TLS {conn.version()}, subject {subject}", flush=True)
+    # The codec works with binary streams, not sockets: wrap the socket.
+    # buffering=0: a raw reader returns as soon as bytes are available.
+    reader = conn.makefile("rb", buffering=0)
+    writer = conn.makefile("wb")
+    encoder = cantcp.Encoder(writer)
+    for frame in cantcp.Decoder(reader):
+        print(f"frame {frame}", flush=True)
         reply = cantcp.Frame(type=frame.type, id=frame.id, data=b"\x01\x02")
         encoder.encode_frame(reply)
+        writer.flush()
 
 
 def main() -> None:

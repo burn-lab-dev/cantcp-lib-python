@@ -62,10 +62,14 @@ def main() -> None:
         peer = conn.getpeercert()
         subject = dict(item[0] for item in peer["subject"]) if peer else None
         print(f"connected: TLS {conn.version()}, subject {subject}")
+        # The codec works with binary streams, not sockets: wrap the socket.
+        writer = conn.makefile("wb")
+        reader = conn.makefile("rb", buffering=0)
         frame = cantcp.Frame(type=cantcp.Type.CLASSIC, id=0x123, data=b"\x11\x22\x33")
-        cantcp.Encoder(conn).encode_frame(frame)
+        cantcp.Encoder(writer).encode_frame(frame)
+        writer.flush()
         print(f"sent: {frame}")
-        reply = next(iter(cantcp.Decoder(conn)))
+        reply = next(iter(cantcp.Decoder(reader)))
         print(f"reply: {reply}")
 
 
