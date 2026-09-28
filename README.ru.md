@@ -59,7 +59,7 @@ CAN FD фрейм (`canfd_frame`):
 |---|---|---|
 | 0 | 4 | `can_id` (little-endian) |
 | 4 | 1 | `len` |
-| 5 | 1 | `flags` (`BRS` 0x01, `ESI` 0x02) |
+| 5 | 1 | `flags` (`BRS` 0x01, `ESI` 0x02; маркер `CANFD_FDF` 0x04 от ядра принимается и игнорируется) |
 | 6 | 1 | `__res0` (должен быть нулём) |
 | 7 | 1 | `__res1` (должен быть нулём) |
 | 8 | 64 | `data` |
@@ -490,7 +490,8 @@ Frame.from_raw(raw: bytes) -> Frame
 (длина CAN FD, не кодируемая 4-битным DLC: валидны только
 `0..8, 12, 16, 20, 24, 32, 48, 64`), `ReservedError` (ненулевые
 pad/reserved), `BadFlagsError` (`rtr` в CAN FD, `eff` или `rtr` с `err`,
-чужие биты flags CAN FD), `BadIDError` (идентификатор не влезает в режим
+чужие биты flags CAN FD; маркер `CANFD_FDF` 0x04 от ядра принимается и
+игнорируется), `BadIDError` (идентификатор не влезает в режим
 адресации).
 
 Байты области данных за пределами поля длины не входят в `data` и не
@@ -770,6 +771,12 @@ cantcp — транспорт, а не слой безопасности. Он �
 Модель угроз, замечание про CPU-амплификацию и чек-лист развёртывания — в
 [SECURITY.ru.md](SECURITY.ru.md). Английская версия:
 [SECURITY.md](SECURITY.md).
+
+Полный пример сервера и клиента TLS 1.3 с mutual TLS — `ssl.SSLContext` для
+обеих сторон, загрузка сертификатов и кодек cantcp поверх соединения — в
+[examples/tls](examples/tls/). Команды OpenSSL для генерации сертификатов —
+в документации cantcp (`docs/TLS-KEYS.ru.md` в репозитории
+[cantcp](https://github.com/burn-lab-dev/cantcp)).
 
 ## Замечания
 
