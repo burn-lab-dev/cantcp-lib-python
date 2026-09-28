@@ -87,7 +87,7 @@ import cantcp
 HOST, PORT = "192.168.1.10", 29536  # the default cantcp gateway port
 
 with socket.create_connection((HOST, PORT)) as conn:
-    decoder = cantcp.Decoder(conn.makefile("rb"))
+    decoder = cantcp.Decoder(conn.makefile("rb", buffering=0))
     try:
         for frame in decoder:
             print(frame)  # Frame{Type:CAN FD, ID:0x123, Flags:BRS, Len:2, Data:0102}
@@ -109,8 +109,10 @@ with socket.create_connection((HOST, PORT)) as conn:
     writer.flush()
 ```
 
-A socket is wrapped with `socket.makefile("rb")` for reading and
-`socket.makefile("wb")` for writing; any binary stream with `read(size)` and
+A socket is wrapped with `socket.makefile("rb", buffering=0)` for reading and
+`socket.makefile("wb")` for writing: the raw reader returns as soon as bytes
+are available, while a buffered reader would block until the requested size is
+filled. Any binary stream with `read(size)` and
 `write(data)` works.
 
 Low-level `Parser.split` / `Parser.encode` stay available for custom readers
@@ -324,7 +326,7 @@ never closes it. It is not safe for concurrent use: use one decoder per
 stream.
 
 ```python
-decoder = cantcp.Decoder(conn.makefile("rb"), logger=logging.getLogger("cantcp"))
+decoder = cantcp.Decoder(conn.makefile("rb", buffering=0), logger=logging.getLogger("cantcp"))
 ```
 
 ### Decoder methods
@@ -345,7 +347,7 @@ underlying reader are propagated unchanged, so a closed connection surfaces as
 spent scanner.
 
 ```python
-decoder = cantcp.Decoder(conn.makefile("rb"))
+decoder = cantcp.Decoder(conn.makefile("rb", buffering=0))
 try:
     while (raw := decoder.decode()) is not None:
         handle_raw(raw)
@@ -370,7 +372,7 @@ field cannot encode raises `BadLenError` even though the tolerant splitter
 accepted the packet. The error returns of `decode` apply unchanged.
 
 ```python
-decoder = cantcp.Decoder(conn.makefile("rb"))
+decoder = cantcp.Decoder(conn.makefile("rb", buffering=0))
 while (frame := decoder.decode_frame()) is not None:
     use(frame)
 ```
@@ -381,7 +383,7 @@ A decoder is iterable and yields parsed frames; the iteration ends at the end
 of the stream.
 
 ```python
-for frame in cantcp.Decoder(conn.makefile("rb")):
+for frame in cantcp.Decoder(conn.makefile("rb", buffering=0)):
     use(frame)
 ```
 
@@ -391,7 +393,7 @@ for frame in cantcp.Decoder(conn.makefile("rb")):
 See `Stats` for the counter fields.
 
 ```python
-decoder = cantcp.Decoder(conn.makefile("rb"))
+decoder = cantcp.Decoder(conn.makefile("rb", buffering=0))
 if (frame := decoder.decode_frame()) is None:
     print("stream closed")
 else:

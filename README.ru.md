@@ -86,7 +86,7 @@ import cantcp
 HOST, PORT = "192.168.1.10", 29536  # порт шлюза cantcp по умолчанию
 
 with socket.create_connection((HOST, PORT)) as conn:
-    decoder = cantcp.Decoder(conn.makefile("rb"))
+    decoder = cantcp.Decoder(conn.makefile("rb", buffering=0))
     try:
         for frame in decoder:
             print(frame)  # Frame{Type:CAN FD, ID:0x123, Flags:BRS, Len:2, Data:0102}
@@ -108,9 +108,10 @@ with socket.create_connection((HOST, PORT)) as conn:
     writer.flush()
 ```
 
-Сокет оборачивается через `socket.makefile("rb")` для чтения и
-`socket.makefile("wb")` для записи; подойдёт любой бинарный поток с
-`read(size)` и `write(data)`.
+Сокет оборачивается через `socket.makefile("rb", buffering=0)` для чтения и
+`socket.makefile("wb")` для записи: сырой reader возвращает данные сразу, как
+только они появились, а буферизованный ждал бы заполнения запрошенного
+размера. Подойдёт любой бинарный поток с `read(size)` и `write(data)`.
 
 Низкоуровневые `Parser.split` / `Parser.encode` остаются доступны для
 собственных читателей и писателей; см. справочник API ниже.
@@ -324,7 +325,7 @@ cantcp.Decoder(reader, **parser_options)
 Не безопасен для конкурентного использования: один декодер на поток.
 
 ```python
-decoder = cantcp.Decoder(conn.makefile("rb"), logger=logging.getLogger("cantcp"))
+decoder = cantcp.Decoder(conn.makefile("rb", buffering=0), logger=logging.getLogger("cantcp"))
 ```
 
 ### Методы декодера
@@ -345,7 +346,7 @@ CAN FD. `None` означает конец потока. Возвращённы�
 сканер.
 
 ```python
-decoder = cantcp.Decoder(conn.makefile("rb"))
+decoder = cantcp.Decoder(conn.makefile("rb", buffering=0))
 try:
     while (raw := decoder.decode()) is not None:
         handle_raw(raw)
@@ -370,7 +371,7 @@ decode_frame() -> Frame | None
 принял. Ошибки `decode` действуют без изменений.
 
 ```python
-decoder = cantcp.Decoder(conn.makefile("rb"))
+decoder = cantcp.Decoder(conn.makefile("rb", buffering=0))
 while (frame := decoder.decode_frame()) is not None:
     use(frame)
 ```
@@ -381,7 +382,7 @@ while (frame := decoder.decode_frame()) is not None:
 потока.
 
 ```python
-for frame in cantcp.Decoder(conn.makefile("rb")):
+for frame in cantcp.Decoder(conn.makefile("rb", buffering=0)):
     use(frame)
 ```
 
@@ -391,7 +392,7 @@ for frame in cantcp.Decoder(conn.makefile("rb")):
 счётчиков — в разделе `Stats`.
 
 ```python
-decoder = cantcp.Decoder(conn.makefile("rb"))
+decoder = cantcp.Decoder(conn.makefile("rb", buffering=0))
 if (frame := decoder.decode_frame()) is None:
     print("stream closed")
 else:
