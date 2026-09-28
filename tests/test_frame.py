@@ -42,7 +42,7 @@ FRAME_ERRORS = [
     ("fd len 9", fd_raw(length=9), BadLenError),
     ("fd len 11", fd_raw(length=11), BadLenError),
     ("fd len 65", fd_raw(length=65), BadLenError),
-    ("fd unknown flags", fd_raw(flags=0x04), BadFlagsError),
+    ("fd unknown flags", fd_raw(flags=0x08), BadFlagsError),
     ("fd res0", fd_raw(res0=1), ReservedError),
     ("fd res1", fd_raw(res1=1), ReservedError),
 ]
@@ -67,7 +67,7 @@ def test_from_raw_errors(raw: bytes, expected: type[CantcpError]) -> None:
         ("classic dlc before reserved", classic_raw(dlc=9, pad=1), BadDLCError),
         ("classic err before dlc", classic_raw(raw_id=CAN_ERR | CAN_EFF, dlc=9), BadFlagsError),
         ("fd rtr before length", fd_raw(raw_id=CAN_RTR, length=9), BadFlagsError),
-        ("fd length before flags", fd_raw(length=9, flags=0x04), BadLenError),
+        ("fd length before flags", fd_raw(length=9, flags=0x08), BadLenError),
         ("fd length before reserved", fd_raw(length=9, res0=1), BadLenError),
     ],
 )
@@ -129,6 +129,16 @@ def test_from_raw_fd_fields() -> None:
     assert frame.brs is True
     assert frame.esi is True
     assert frame.data == b"\x01\x02"
+    assert validate_raw(raw) is Type.FD
+
+
+def test_from_raw_fd_kernel_fdf_bit() -> None:
+    # Linux sets CANFD_FDF (0x04) on delivered CAN FD frames: the bit is
+    # accepted and ignored.
+    raw = fd_raw(raw_id=0x123, length=1, flags=0x05, data=b"\xaa")
+    frame = Frame.from_raw(raw)
+    assert frame.brs is True
+    assert frame.esi is False
     assert validate_raw(raw) is Type.FD
 
 
