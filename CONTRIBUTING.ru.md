@@ -40,16 +40,17 @@ line и branch** (`fail_under = 100` в `pyproject.toml`).
 
 ## Тестовые векторы
 
-Канон протокола лежит в `testdata/vectors.json` Go-репозитория
-[cantcp-lib-go](https://github.com/burn-lab-dev/cantcp-lib-go). Python-
-репозиторий хранит побайтовую копию в `tests/vectors.json` с SHA-256 в
+Канон протокола лежит в репозитории
+[cantcp-spec](https://github.com/burn-lab-dev/cantcp-spec). Python-репозиторий
+хранит побайтовую копию в `tests/vectors.json` с SHA-256 в
 `tests/vectors.sha256`, а `tests/test_vectors.py` реплеит весь файл (потоки,
-сырые фреймы, значения полей, счётчики и ошибки).
+сырые фреймы, значения полей, счётчики и ошибки). CI падает, когда копия
+расходится с каноном.
 
-Обновление копии из соседнего Go-репозитория или с GitHub:
+Обновление копии из соседнего `cantcp-spec` или с GitHub:
 
 ```bash
-uv run python scripts/sync_vectors.py                 # по умолчанию ../cantcp-lib-go
+uv run python scripts/sync_vectors.py                 # по умолчанию ../cantcp-spec
 uv run python scripts/sync_vectors.py --url URL       # сырой канон с GitHub
 uv run python scripts/sync_vectors.py --check         # ошибка при расхождении
 ```

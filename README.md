@@ -25,8 +25,9 @@ them over its own API (for example HTTP) and clients poll that API when they
 need them.
 
 The package depends on the standard library only. The protocol canon and its
-byte-for-byte test vectors are shared with the Go implementation,
-[cantcp-lib-go](https://github.com/burn-lab-dev/cantcp-lib-go).
+byte-for-byte test vectors live in
+[cantcp-spec](https://github.com/burn-lab-dev/cantcp-spec) and are shared
+with the other implementations.
 
 ## Stream framing
 
