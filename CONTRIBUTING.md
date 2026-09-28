@@ -40,16 +40,17 @@ coverage is required** (`fail_under = 100` in `pyproject.toml`).
 
 ## Test vectors
 
-The protocol canon lives in `testdata/vectors.json` of the Go repository
-[cantcp-lib-go](https://github.com/burn-lab-dev/cantcp-lib-go). The Python
+The protocol canon lives in
+[cantcp-spec](https://github.com/burn-lab-dev/cantcp-spec). The Python
 repository keeps a byte-for-byte copy in `tests/vectors.json` with its SHA-256
 in `tests/vectors.sha256`, and `tests/test_vectors.py` replays the whole file
-(streams, raw frames, field values, counters and errors).
+(streams, raw frames, field values, counters and errors). The CI fails when
+the copy diverges from the canon.
 
-Refresh the copy from the sibling Go repository or from GitHub:
+Refresh the copy from the sibling `cantcp-spec` checkout or from GitHub:
 
 ```bash
-uv run python scripts/sync_vectors.py                 # ../cantcp-lib-go by default
+uv run python scripts/sync_vectors.py                 # ../cantcp-spec by default
 uv run python scripts/sync_vectors.py --url URL       # raw canon from GitHub
 uv run python scripts/sync_vectors.py --check         # fail on a difference
 ```

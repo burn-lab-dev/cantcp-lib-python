@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Sync tests/vectors.json with the canon of the Go repository.
+"""Sync tests/vectors.json with the protocol canon.
 
-The canon of the protocol lives in ``testdata/vectors.json`` of
-``cantcp-lib-go``. This script copies it byte-for-byte into
-``tests/vectors.json`` and records its SHA-256 in ``tests/vectors.sha256``, so
-both implementations are checked against exactly the same bytes.
+The canon of the protocol lives in the ``cantcp-spec`` repository. This
+script copies it byte-for-byte into ``tests/vectors.json`` and records its
+SHA-256 in ``tests/vectors.sha256``, so every implementation is checked
+against exactly the same bytes.
 
 Usage:
 
@@ -23,10 +23,8 @@ from pathlib import Path
 from urllib.request import urlopen
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_SOURCE = REPO_ROOT.parent / "cantcp-lib-go" / "testdata" / "vectors.json"
-DEFAULT_URL = (
-    "https://raw.githubusercontent.com/burn-lab-dev/cantcp-lib-go/main/testdata/vectors.json"
-)
+DEFAULT_SOURCE = REPO_ROOT.parent / "cantcp-spec" / "vectors.json"
+DEFAULT_URL = "https://raw.githubusercontent.com/burn-lab-dev/cantcp-spec/main/vectors.json"
 TARGET = REPO_ROOT / "tests" / "vectors.json"
 CHECKSUM = REPO_ROOT / "tests" / "vectors.sha256"
 
