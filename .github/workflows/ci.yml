@@ -45,6 +45,56 @@ jobs:
       - name: Verify the local checksum
         run: (cd tests && sha256sum -c vectors.sha256)
 
+  interop:
+    # The library against the released daemon: cantcpd comes from the latest
+    # published tag (go install @latest), the client is the local example.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+          enable-cache: true
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26.x"
+          cache: true
+      - name: Install the released cantcpd and cantcp-cli
+        run: |
+          go install github.com/burn-lab-dev/cantcp/cmd/cantcpd@latest
+          go install github.com/burn-lab-dev/cantcp/cmd/cantcp-cli@latest
+          "$(go env GOPATH)/bin/cantcpd" --version
+          "$(go env GOPATH)/bin/cantcp-cli" --version
+      - name: Enable vcan0
+        run: |
+          sudo apt-get update
+          if ! sudo modprobe vcan 2>/dev/null; then
+            sudo apt-get install -y "linux-modules-extra-$(uname -r)" || true
+          fi
+          sudo modprobe vcan
+          sudo ip link add dev vcan0 type vcan
+          sudo ip link set vcan0 mtu 72
+          sudo ip link set up vcan0
+      - name: uv sync
+        run: uv sync --frozen --no-dev
+      - name: Interop against the released daemon
+        run: |
+          setsid "$(go env GOPATH)/bin/cantcpd" --can vcan0 --listen 127.0.0.1:29536 \
+            --stats-listen 127.0.0.1:29537 </dev/null >/tmp/cantcpd.log 2>&1 &
+          for _ in $(seq 1 50); do
+            curl -fsS --max-time 1 http://127.0.0.1:29537/healthz >/dev/null 2>&1 && break
+            sleep 0.1
+          done
+          (timeout 20 .venv/bin/python3 examples/client.py listen --count 2 \
+            >/tmp/listen.out 2>/tmp/listen.err &)
+          sleep 3
+          "$(go env GOPATH)/bin/cantcp-cli" send --id 111 --data AABB
+          .venv/bin/python3 examples/client.py send --id 222 --data CCDD
+          sleep 2
+          cat /tmp/listen.out
+          test "$(wc -l < /tmp/listen.out)" = 2
+          echo "interop: the released daemon and the library client exchanged frames"
+
   properties:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
