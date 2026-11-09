@@ -16,9 +16,12 @@ jobs:
       matrix:
         python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.3
         with:
+          # Pinned: a floating uv would change between the daily runs. Bump
+          # together with uv_build in pyproject.toml.
+          version: "0.13.7"
           python-version: ${{ matrix.python-version }}
           enable-cache: true
       - name: uv lock check
@@ -37,7 +40,7 @@ jobs:
   canon:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Check the vectors against the canon
         run: |
           python3 scripts/sync_vectors.py --check \
@@ -50,12 +53,13 @@ jobs:
     # published tag (go install @latest), the client is the local example.
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.3
         with:
+          version: "0.13.7"
           python-version: "3.12"
           enable-cache: true
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v7
         with:
           go-version: "1.26.x"
           cache: true
@@ -99,9 +103,10 @@ jobs:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.3
         with:
+          version: "0.13.7"
           python-version: "3.10"
           enable-cache: true
       - name: uv sync
